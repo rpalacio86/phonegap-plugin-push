@@ -25,7 +25,7 @@ public class PushHandlerActivity extends Activity implements PushConstants {
         Log.v(LOG_TAG, "onCreate");
 
         boolean isPushPluginActive = PushPlugin.isActive();
-        processPushBundle(isPushPluginActive);
+        //processPushBundle(isPushPluginActive);
 
         finish();
 
@@ -48,7 +48,7 @@ public class PushHandlerActivity extends Activity implements PushConstants {
             originalExtras.putBoolean(COLDSTART, !isPushPluginActive);
             originalExtras.putString(CALLBACK, extras.getString("callback"));
 
-            PushPlugin.sendExtras(originalExtras);
+            PushPlugin.sendExtras(originalExtras, this);
         }
     }
 

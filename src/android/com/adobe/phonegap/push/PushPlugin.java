@@ -21,6 +21,10 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.ArrayList;
+
+import me.leolin.shortcutbadger.ShortcutBadger;
+import me.leolin.shortcutbadger.impl.DefaultBadger;
 
 public class PushPlugin extends CordovaPlugin implements PushConstants {
 
@@ -28,7 +32,7 @@ public class PushPlugin extends CordovaPlugin implements PushConstants {
 
     private static CallbackContext pushContext;
     private static CordovaWebView gWebView;
-    private static Bundle gCachedExtras = null;
+    private static ArrayList<Bundle> gCachedExtras = new ArrayList<Bundle>();
     private static boolean gForeground = false;
 
     /**
@@ -118,11 +122,13 @@ public class PushPlugin extends CordovaPlugin implements PushConstants {
                         editor.commit();
                     }
 
-                    if (gCachedExtras != null) {
-                        Log.v(LOG_TAG, "sending cached extras");
-                        sendExtras(gCachedExtras);
-                        gCachedExtras = null;
-                    }
+                    if ( gCachedExtras.size()>0) {
+						Log.v(LOG_TAG, "sending cached extras");
+						for (Bundle b: gCachedExtras) {
+							sendExtras(b, getApplicationContext());
+						}
+						gCachedExtras.clear();
+					}
                 }
             });
         } else if (UNREGISTER.equals(action)) {
@@ -177,18 +183,34 @@ public class PushPlugin extends CordovaPlugin implements PushConstants {
         }
     }
 
+    private static boolean canBadgeAppIcon(Context ctx) {
+        ShortcutBadger badger = ShortcutBadger.with(ctx);
+        return !(badger instanceof DefaultBadger);
+    }
+    
+    private static void badgear(Context ctx) {
+		if (pushContext != null) {
+			int count = gCachedExtras.size();
+			Log.v(LOG_TAG, "badgear: Badgeando con "+ count);
+			ShortcutBadger.with(ctx).count(count);
+		} else {
+			Log.v(LOG_TAG, "badgear: El contexto es nulo, no se puede badgear");
+		}
+	}
+
     /*
      * Sends the pushbundle extras to the client application.
      * If the client application isn't currently active, it is cached for later processing.
      */
-    public static void sendExtras(Bundle extras) {
+    public static void sendExtras(Bundle extras, Context ctx) {
         if (extras != null) {
             if (gWebView != null) {
                 sendEvent(convertBundleToJson(extras));
             } else {
-                Log.v(LOG_TAG, "sendExtras: caching extras to send at a later time.");
-                gCachedExtras = extras;
+               Log.v(LOG_TAG, "sendExtras: caching extras to send at a later time.");
+               gCachedExtras.add(extras);
             }
+			badgear(ctx);
         }
     }
 
