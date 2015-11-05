@@ -189,7 +189,7 @@ public class PushPlugin extends CordovaPlugin implements PushConstants {
     }
     
     private static void badgear(Context ctx) {
-		if (pushContext != null) {
+		if (ctx != null) {
 			int count = gCachedExtras.size();
 			Log.v(LOG_TAG, "badgear: Badgeando con "+ count);
 			ShortcutBadger.with(ctx).count(count);
