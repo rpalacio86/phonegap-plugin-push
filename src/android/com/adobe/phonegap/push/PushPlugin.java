@@ -128,6 +128,7 @@ public class PushPlugin extends CordovaPlugin implements PushConstants {
 							sendExtras(b, getApplicationContext());
 						}
 						gCachedExtras.clear();
+						badgear(getApplicationContext());
 					}
                 }
             });
@@ -205,12 +206,12 @@ public class PushPlugin extends CordovaPlugin implements PushConstants {
     public static void sendExtras(Bundle extras, Context ctx) {
         if (extras != null) {
             if (gWebView != null) {
-                sendEvent(convertBundleToJson(extras));
+				sendEvent(convertBundleToJson(extras));
             } else {
-               Log.v(LOG_TAG, "sendExtras: caching extras to send at a later time.");
-               gCachedExtras.add(extras);
+				Log.v(LOG_TAG, "sendExtras: caching extras to send at a later time.");
+				gCachedExtras.add(extras);
+				badgear(ctx);
             }
-			badgear(ctx);
         }
     }
 
