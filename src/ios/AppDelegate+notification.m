@@ -79,17 +79,17 @@ static char launchNotificationKey;
     else {
         NSLog(@"app in-active");
 
-        // do some convoluted logic to find out if this should be a silent push.
-        long silent = 0;
-        id aps = [userInfo objectForKey:@"aps"];
-        id contentAvailable = [aps objectForKey:@"content-available"];
-        if ([contentAvailable isKindOfClass:[NSString class]] && [contentAvailable isEqualToString:@"1"]) {
-            silent = 1;
-        } else if ([contentAvailable isKindOfClass:[NSNumber class]]) {
-            silent = [contentAvailable integerValue];
-        }
-
-        if (silent == 1) {
+        // // do some convoluted logic to find out if this should be a silent push.
+        // long silent = 0;
+        // id aps = [userInfo objectForKey:@"aps"];
+        // id contentAvailable = [aps objectForKey:@"content-available"];
+        // if ([contentAvailable isKindOfClass:[NSString class]] && [contentAvailable isEqualToString:@"1"]) {
+        //     silent = 1;
+        // } else if ([contentAvailable isKindOfClass:[NSNumber class]]) {
+        //     silent = [contentAvailable integerValue];
+        // }
+        //
+        // if (silent == 1) {
             NSLog(@"this should be a silent push");
             void (^safeHandler)(UIBackgroundFetchResult) = ^(UIBackgroundFetchResult result){
                 dispatch_async(dispatch_get_main_queue(), ^{
@@ -105,13 +105,13 @@ static char launchNotificationKey;
             pushHandler.isInline = NO;
             pushHandler.handlerObj = params;
             [pushHandler notificationReceived];
-        } else {
-            NSLog(@"just put it in the shade");
-            //save it for later
-            self.launchNotification = userInfo;
-
-            completionHandler(UIBackgroundFetchResultNewData);
-        }
+        // } else {
+        //     NSLog(@"just put it in the shade");
+        //     //save it for later
+        //     self.launchNotification = userInfo;
+        //
+        //     completionHandler(UIBackgroundFetchResultNewData);
+        // }
     }
 }
 

@@ -210,7 +210,7 @@ public class GCMIntentService extends GcmListenerService implements PushConstant
             createNotification(context, extras);
         }
         extras.putBoolean(COLDSTART, false);
-		extras.putString(CALLBACK, extras.getString("callback"));
+		    extras.putString(CALLBACK, extras.getString("callback"));
         PushPlugin.sendExtras(extras, context);
     }
 

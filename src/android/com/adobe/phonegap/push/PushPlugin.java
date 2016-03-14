@@ -128,13 +128,13 @@ public class PushPlugin extends CordovaPlugin implements PushConstants {
                     }
 
                     if ( gCachedExtras.size()>0) {
-						Log.v(LOG_TAG, "sending cached extras");
-						for (Bundle b: gCachedExtras) {
-							sendExtras(b, getApplicationContext());
-						}
-						gCachedExtras.clear();
-						badgear(getApplicationContext());
-					}
+                    	Log.v(LOG_TAG, "sending cached extras");
+                    	for (Bundle b: gCachedExtras) {
+                    		sendExtras(b, getApplicationContext());
+                    	}
+                    	gCachedExtras.clear();
+                    	badgear(getApplicationContext());
+                    }
                 }
             });
         } else if (UNREGISTER.equals(action)) {
