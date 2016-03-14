@@ -48,7 +48,7 @@ static char launchNotificationKey;
     {
         NSDictionary *launchOptions = [notification userInfo];
         if (launchOptions)
-            self.launchNotification = [launchOptions objectForKey: @"UIApplicationLaunchOptionsRemoteNotificationKey"];
+            [self addLaunchNotification:[launchOptions objectForKey: @"UIApplicationLaunchOptionsRemoteNotificationKey"]];
     }
 }
 
@@ -79,17 +79,17 @@ static char launchNotificationKey;
     else {
         NSLog(@"app in-active");
 
-        // // do some convoluted logic to find out if this should be a silent push.
-        // long silent = 0;
-        // id aps = [userInfo objectForKey:@"aps"];
-        // id contentAvailable = [aps objectForKey:@"content-available"];
-        // if ([contentAvailable isKindOfClass:[NSString class]] && [contentAvailable isEqualToString:@"1"]) {
-        //     silent = 1;
-        // } else if ([contentAvailable isKindOfClass:[NSNumber class]]) {
-        //     silent = [contentAvailable integerValue];
-        // }
-        //
-        // if (silent == 1) {
+        // do some convoluted logic to find out if this should be a silent push.
+        long silent = 0;
+        id aps = [userInfo objectForKey:@"aps"];
+        id contentAvailable = [aps objectForKey:@"content-available"];
+        if ([contentAvailable isKindOfClass:[NSString class]] && [contentAvailable isEqualToString:@"1"]) {
+            silent = 1;
+        } else if ([contentAvailable isKindOfClass:[NSNumber class]]) {
+            silent = [contentAvailable integerValue];
+        }
+
+        if (silent == 1) {
             NSLog(@"this should be a silent push");
             void (^safeHandler)(UIBackgroundFetchResult) = ^(UIBackgroundFetchResult result){
                 dispatch_async(dispatch_get_main_queue(), ^{
@@ -105,13 +105,13 @@ static char launchNotificationKey;
             pushHandler.isInline = NO;
             pushHandler.handlerObj = params;
             [pushHandler notificationReceived];
-        // } else {
-        //     NSLog(@"just put it in the shade");
-        //     //save it for later
-        //     self.launchNotification = userInfo;
-        //
-        //     completionHandler(UIBackgroundFetchResultNewData);
-        // }
+        } else {
+            NSLog(@"just put it in the shade");
+            //save it for later
+            [self addLaunchNotification:userInfo];
+
+            completionHandler(UIBackgroundFetchResultNewData);
+        }
     }
 }
 
@@ -140,11 +140,13 @@ static char launchNotificationKey;
         NSLog(@"PushPlugin skip clear badge");
     }
 
-    if (self.launchNotification) {
-        pushHandler.isInline = NO;
-        pushHandler.notificationMessage = self.launchNotification;
-        self.launchNotification = nil;
-        [pushHandler performSelectorOnMainThread:@selector(notificationReceived) withObject:pushHandler waitUntilDone:NO];
+    if ([self.launchNotifications count] > 0) {
+        for (NSDictionary *launchNotification in self.launchNotifications) {
+          pushHandler.isInline = NO;
+          pushHandler.notificationMessage = launchNotification;
+          [pushHandler performSelectorOnMainThread:@selector(notificationReceived) withObject:pushHandler waitUntilDone:NO];
+        }
+        self.launchNotifications = nil;
     }
 }
 
@@ -167,19 +169,32 @@ forRemoteNotification: (NSDictionary *) notification completionHandler: (void (^
 
 // The accessors use an Associative Reference since you can't define a iVar in a category
 // http://developer.apple.com/library/ios/#documentation/cocoa/conceptual/objectivec/Chapters/ocAssociativeReferences.html
-- (NSMutableArray *)launchNotification
+- (NSMutableArray *)obtenerLaunchNotifications
 {
-    return objc_getAssociatedObject(self, &launchNotificationKey);
-}
-
-- (void)setLaunchNotification:(NSDictionary *)aDictionary
-{
-    objc_setAssociatedObject(self, &launchNotificationKey, aDictionary, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+    return objc_getAssociatedObject(self, &launchNotificationsKey);
 }
 
 - (void)dealloc
 {
-    self.launchNotification = nil; // clear the association and release the object
+    self.launchNotifications = nil; // clear the association and release the object
+}
+
+- (void)addLaunchNotification:(NSDictionary *)notification
+{
+  [[self launchNotifications] addObject:notification];
+}
+
+- (void)setLaunchNotifications:(NSMutableArray *)launchNotifications
+{
+  objc_setAssociatedObject(self, &launchNotificationsKey, launchNotifications, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+}
+
+- (NSMutableArray *)launchNotifications
+{
+  if (![self obtenerLaunchNotifications]) {
+    [self setLaunchNotifications:[[NSMutableArray alloc]initWithCapacity:1]];
+  }
+  return [self obtenerLaunchNotifications];
 }
 
 @end

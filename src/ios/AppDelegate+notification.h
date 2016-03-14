@@ -16,6 +16,10 @@
 - (void)application:(UIApplication *)application handleActionWithIdentifier:(NSString *)identifier forRemoteNotification:(NSDictionary *)userInfo completionHandler:(void(^)())completionHandler;
 - (id) getCommandInstance:(NSString*)className;
 
-@property (nonatomic, retain) NSDictionary  *launchNotification;
+@property (nonatomic, retain) NSMutableArray  *launchNotifications;
+
+- (void)addLaunchNotification:(NSString *)notification;
+- (void)setLaunchNotifications:(NSMutableArray *)launchNotifications;
+- (NSMutableArray *)launchNotifications;
 
 @end
