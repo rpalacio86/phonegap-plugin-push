@@ -18,7 +18,7 @@
 
 @property (nonatomic, retain) NSMutableArray  *launchNotifications;
 
-- (void)addLaunchNotification:(NSString *)notification;
+- (void)addLaunchNotification:(NSDictionary *)notification;
 - (void)setLaunchNotifications:(NSMutableArray *)launchNotifications;
 - (NSMutableArray *)launchNotifications;
 

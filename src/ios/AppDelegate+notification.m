@@ -10,7 +10,7 @@
 #import "PushPlugin.h"
 #import <objc/runtime.h>
 
-static char launchNotificationKey;
+static char launchNotificationsKey;
 
 @implementation AppDelegate (notification)
 
@@ -78,40 +78,10 @@ static char launchNotificationKey;
     // app is in background or in stand by
     else {
         NSLog(@"app in-active");
+        //save it for later
+        [self addLaunchNotification:userInfo];
 
-        // do some convoluted logic to find out if this should be a silent push.
-        long silent = 0;
-        id aps = [userInfo objectForKey:@"aps"];
-        id contentAvailable = [aps objectForKey:@"content-available"];
-        if ([contentAvailable isKindOfClass:[NSString class]] && [contentAvailable isEqualToString:@"1"]) {
-            silent = 1;
-        } else if ([contentAvailable isKindOfClass:[NSNumber class]]) {
-            silent = [contentAvailable integerValue];
-        }
-
-        if (silent == 1) {
-            NSLog(@"this should be a silent push");
-            void (^safeHandler)(UIBackgroundFetchResult) = ^(UIBackgroundFetchResult result){
-                dispatch_async(dispatch_get_main_queue(), ^{
-                    completionHandler(result);
-                });
-            };
-
-            NSMutableDictionary* params = [NSMutableDictionary dictionaryWithCapacity:2];
-            [params setObject:safeHandler forKey:@"handler"];
-
-            PushPlugin *pushHandler = [self getCommandInstance:@"PushNotification"];
-            pushHandler.notificationMessage = userInfo;
-            pushHandler.isInline = NO;
-            pushHandler.handlerObj = params;
-            [pushHandler notificationReceived];
-        } else {
-            NSLog(@"just put it in the shade");
-            //save it for later
-            [self addLaunchNotification:userInfo];
-
-            completionHandler(UIBackgroundFetchResultNewData);
-        }
+        completionHandler(UIBackgroundFetchResultNewData);
     }
 }
 
@@ -155,14 +125,15 @@ static char launchNotificationKey;
 forRemoteNotification: (NSDictionary *) notification completionHandler: (void (^)()) completionHandler {
 
     NSLog(@"Push Plugin handleActionWithIdentifier %@", identifier);
-    NSMutableDictionary *userInfo = [notification mutableCopy];
-    [userInfo setObject:identifier forKey:@"callback"];
-    PushPlugin *pushHandler = [self getCommandInstance:@"PushNotification"];
-    pushHandler.notificationMessage = userInfo;
-    pushHandler.isInline = NO;
-    [pushHandler notificationReceived];
 
-
+    if ([self.launchNotifications count] > 0) {
+        for (NSDictionary *launchNotification in self.launchNotifications) {
+          pushHandler.isInline = NO;
+          pushHandler.notificationMessage = launchNotification;
+          [pushHandler notificationReceived];
+        }
+        self.launchNotifications = nil;
+    }
     // Must be called when finished
     completionHandler();
 }
