@@ -44,8 +44,10 @@ static char launchNotificationsKey;
 // to process notifications in cold-start situations
 - (void)createNotificationChecker:(NSNotification *)notification
 {
+    NSLog(@"createNotificationChecker");
     if (notification)
     {
+      NSLog(@"hay notificacion");
         NSDictionary *launchOptions = [notification userInfo];
         if (launchOptions)
             [self addLaunchNotification:[launchOptions objectForKey: @"UIApplicationLaunchOptionsRemoteNotificationKey"]];
@@ -60,6 +62,11 @@ static char launchNotificationsKey;
 - (void)application:(UIApplication *)application didFailToRegisterForRemoteNotificationsWithError:(NSError *)error {
     PushPlugin *pushHandler = [self getCommandInstance:@"PushNotification"];
     [pushHandler didFailToRegisterForRemoteNotificationsWithError:error];
+}
+
+- (void)application:(UIApplication *)application didReceiveRemoteNotification:(NSDictionary *)userInfo {
+   NSLog(@"didReceiveRemoteNotification");
+   [self addLaunchNotification:userInfo];
 }
 
 - (void)application:(UIApplication *)application didReceiveRemoteNotification:(NSDictionary *)userInfo fetchCompletionHandler:(void (^)(UIBackgroundFetchResult))completionHandler {
@@ -80,7 +87,7 @@ static char launchNotificationsKey;
         NSLog(@"app in-active");
         //save it for later
         [self addLaunchNotification:userInfo];
-
+        NSLog(@"Cantidad de notificaciones sin procesar: %@", [self.launchNotifications count]);
         completionHandler(UIBackgroundFetchResultNewData);
     }
 }
@@ -111,7 +118,9 @@ static char launchNotificationsKey;
     }
 
     if ([self.launchNotifications count] > 0) {
+        NSLog(@"Cantidad de notificaciones a procesar: %@", [self.launchNotifications count]);
         for (NSDictionary *launchNotification in self.launchNotifications) {
+          PushPlugin *pushHandler = [self getCommandInstance:@"PushNotification"];
           pushHandler.isInline = NO;
           pushHandler.notificationMessage = launchNotification;
           [pushHandler performSelectorOnMainThread:@selector(notificationReceived) withObject:pushHandler waitUntilDone:NO];
@@ -128,6 +137,7 @@ forRemoteNotification: (NSDictionary *) notification completionHandler: (void (^
 
     if ([self.launchNotifications count] > 0) {
         for (NSDictionary *launchNotification in self.launchNotifications) {
+          PushPlugin *pushHandler = [self getCommandInstance:@"PushNotification"];
           pushHandler.isInline = NO;
           pushHandler.notificationMessage = launchNotification;
           [pushHandler notificationReceived];
